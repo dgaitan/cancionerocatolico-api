@@ -1,0 +1,320 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model authors {
+  id                BigInt    @id @default(autoincrement())
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  deleted_at        DateTime? @db.Timestamp(0)
+  is_public         Boolean   @default(false)
+  name              String    @db.VarChar(500)
+  slug              String    @db.VarChar(500)
+  short_description String?
+  biography         String?
+  image             String?   @db.VarChar(500)
+  meta_title        String?   @db.VarChar(500)
+  meta_description  String?   @db.VarChar(500)
+  meta_keywords     String?   @db.VarChar(500)
+  views             Int?      @default(0)
+}
+
+model authors_songs {
+  id         BigInt    @id @default(autoincrement())
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  author_id  BigInt
+  song_id    BigInt
+}
+
+model categories {
+  id               BigInt    @id @default(autoincrement())
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+  deleted_at       DateTime? @db.Timestamp(0)
+  is_archived      Boolean   @default(false)
+  name             String    @db.VarChar(500)
+  slug             String    @db.VarChar(500)
+  description      String?
+  image            String?   @db.VarChar(500)
+  meta_title       String?   @db.VarChar(500)
+  meta_description String?   @db.VarChar(500)
+  meta_keywords    String?   @db.VarChar(500)
+}
+
+model categories_songs {
+  id          BigInt    @id @default(autoincrement())
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  category_id BigInt
+  song_id     BigInt
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement())
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String
+  queue      String
+  payload    String
+  exception  String
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model favorite_playlists {
+  id          BigInt    @id @default(autoincrement())
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  user_id     BigInt
+  playlist_id BigInt
+}
+
+model folder_song {
+  id        BigInt  @id @default(autoincrement())
+  folder_id BigInt
+  song_id   BigInt
+  folders   folders @relation(fields: [folder_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "folder_song_folder_id_foreign")
+  songs     songs   @relation(fields: [song_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "folder_song_song_id_foreign")
+
+  @@unique([folder_id, song_id], map: "folder_song_folder_id_song_id_unique")
+}
+
+model folders {
+  id          BigInt        @id @default(autoincrement())
+  created_at  DateTime?     @db.Timestamp(0)
+  updated_at  DateTime?     @db.Timestamp(0)
+  deleted_at  DateTime?     @db.Timestamp(0)
+  name        String        @db.VarChar(500)
+  slug        String        @db.VarChar(500)
+  order       Int           @default(0)
+  folder_song folder_song[]
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement())
+  queue        String @db.VarChar(255)
+  payload      String
+  attempts     Int    @db.SmallInt
+  reserved_at  Int?
+  available_at Int
+  created_at   Int
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model magic_link_codes {
+  id         BigInt    @id @default(autoincrement())
+  email      String    @db.VarChar(255)
+  code       String    @db.VarChar(6)
+  expires_at DateTime  @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "magic_link_codes_email_index")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement())
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model notifications {
+  id              String    @id @db.Uuid
+  type            String    @db.VarChar(255)
+  notifiable_type String    @db.VarChar(255)
+  notifiable_id   BigInt
+  data            String
+  read_at         DateTime? @db.Timestamp(0)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+
+  @@index([notifiable_type, notifiable_id], map: "notifications_notifiable_type_notifiable_id_index")
+}
+
+model password_reset_tokens {
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement())
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model playlist_song {
+  id          BigInt    @id @default(autoincrement())
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  playlist_id BigInt
+  song_id     BigInt
+  order       Int       @default(0)
+  tune        String?   @db.VarChar(50)
+  playlists   playlists @relation(fields: [playlist_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlist_song_playlist_id_foreign")
+  songs       songs     @relation(fields: [song_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "playlist_song_song_id_foreign")
+}
+
+model playlists {
+  id               BigInt          @id @default(autoincrement())
+  created_at       DateTime?       @db.Timestamp(0)
+  updated_at       DateTime?       @db.Timestamp(0)
+  deleted_at       DateTime?       @db.Timestamp(0)
+  owner_id         BigInt?
+  uuid             String          @unique(map: "playlists_uuid_unique") @db.Uuid
+  name             String          @db.VarChar(255)
+  description      String?
+  is_public        Boolean         @default(false)
+  is_collaborative Boolean         @default(false)
+  likes            Int?            @default(0)
+  views            Int?            @default(0)
+  shares           Int?            @default(0)
+  slug             String?         @db.VarChar(500)
+  playlist_song    playlist_song[]
+}
+
+model posts {
+  id               BigInt    @id @default(autoincrement())
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+  author_id        BigInt
+  title            String    @db.VarChar(500)
+  slug             String    @db.VarChar(500)
+  excerpt          String?
+  content          String?
+  image            String?   @db.VarChar(500)
+  live_date        DateTime? @db.Timestamp(0)
+  is_featured      Boolean   @default(false)
+  meta_title       String?   @db.VarChar(500)
+  meta_description String?   @db.VarChar(500)
+  meta_keywords    String?   @db.VarChar(500)
+}
+
+model seo {
+  id            BigInt    @id @default(autoincrement())
+  model_type    String    @db.VarChar(255)
+  model_id      BigInt
+  description   String?
+  title         String?   @db.VarChar(255)
+  image         String?   @db.VarChar(255)
+  author        String?   @db.VarChar(255)
+  robots        String?   @db.VarChar(255)
+  canonical_url String?   @db.VarChar(255)
+  created_at    DateTime? @db.Timestamp(0)
+  updated_at    DateTime? @db.Timestamp(0)
+
+  @@index([model_type, model_id], map: "seo_model_type_model_id_index")
+}
+
+model songs {
+  deleted_at                    DateTime?       @db.Timestamp(0)
+  id                            BigInt          @id @default(autoincrement())
+  created_at                    DateTime?       @db.Timestamp(0)
+  updated_at                    DateTime?       @db.Timestamp(0)
+  is_public                     Boolean         @default(false)
+  exclude_from_search           Boolean         @default(false)
+  name                          String          @db.VarChar(500)
+  slug                          String          @db.VarChar(500)
+  short_description             String?
+  lyrics                        String?
+  youtube_url                   String?         @db.VarChar(500)
+  meta_title                    String?         @db.VarChar(500)
+  meta_description              String?         @db.VarChar(500)
+  meta_keywords                 String?         @db.VarChar(500)
+  presentation_background_color String?         @db.VarChar(100)
+  presentation_text_color       String?         @db.VarChar(100)
+  presentation_background_image String?         @db.VarChar(500)
+  font_size                     Int?
+  likes                         Int?            @default(0)
+  views                         Int?            @default(0)
+  shares                        Int?            @default(0)
+  image                         String?         @db.VarChar(500)
+  lyrics_with_chords            String?
+  chord_image                   String?         @db.VarChar(1000)
+  lyric                         Json?           @db.Json
+  has_lyrics                    Boolean         @default(false)
+  folder_song                   folder_song[]
+  playlist_song                 playlist_song[]
+}
+
+model user_favorites {
+  id         BigInt    @id @default(autoincrement())
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  user_id    BigInt
+  song_id    BigInt
+}
+
+model users {
+  deleted_at           DateTime? @db.Timestamp(0)
+  id                   BigInt    @id @default(autoincrement())
+  name                 String    @db.VarChar(255)
+  email                String    @unique(map: "users_email_unique") @db.VarChar(255)
+  email_verified_at    DateTime? @db.Timestamp(0)
+  password             String?   @db.VarChar(255)
+  remember_token       String?   @db.VarChar(100)
+  created_at           DateTime? @db.Timestamp(0)
+  updated_at           DateTime? @db.Timestamp(0)
+  is_admin             Boolean   @default(false)
+  is_active            Boolean   @default(false)
+  is_super_admin       Boolean   @default(false)
+  username             String?   @unique(map: "users_username_unique") @db.VarChar(50)
+  can_contribute       Boolean   @default(false)
+  can_comment          Boolean   @default(false)
+  can_create_playlists Boolean   @default(false)
+  can_give_likes       Boolean   @default(false)
+  is_subscribed        Boolean   @default(true)
+  country              String?   @default("NI") @db.VarChar(2)
+  ignore_verification  Boolean   @default(false)
+}
+
+model verses {
+  id         BigInt    @id @default(autoincrement())
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  song_id    BigInt
+  order      Int       @default(0)
+  verse_type Int       @default(1)
+  content    String?
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model video_authors {
+  video_id  BigInt
+  author_id BigInt
+
+  @@ignore
+}
+
+model videos {
+  id               BigInt    @id @default(autoincrement())
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+  song_id          BigInt
+  title            String?   @db.VarChar(255)
+  slug             String?   @db.VarChar(255)
+  uuid             String?   @unique(map: "videos_uuid_unique") @db.Uuid
+  description      String?
+  video_url        String    @db.VarChar(255)
+  thumbnail_url    String?   @db.VarChar(255)
+  meta_title       String?   @db.VarChar(500)
+  meta_description String?   @db.VarChar(500)
+  meta_keywords    String?   @db.VarChar(500)
+  likes            Int?      @default(0)
+  views            Int?      @default(0)
+  shares           Int?      @default(0)
+}
