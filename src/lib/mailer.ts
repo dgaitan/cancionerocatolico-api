@@ -10,12 +10,16 @@ const transporter = nodemailer.createTransport({
     : {}),
 });
 
-export async function sendMagicLink(to: string, magicLink: string): Promise<void> {
+export async function sendMagicLink(
+  to: string,
+  magicLink: string,
+  expiresMinutes: number = config.MAGIC_LINK_EXPIRES_MINUTES,
+): Promise<void> {
   await transporter.sendMail({
     from: config.EMAIL_FROM,
     to,
     subject: 'Your login link — Cancionero Católico',
-    text: `Click this link to sign in (expires in ${config.MAGIC_LINK_EXPIRES_MINUTES} minutes):\n\n${magicLink}\n\nIf you did not request this, you can safely ignore it.`,
-    html: `<p>Click the link below to sign in. It expires in <strong>${config.MAGIC_LINK_EXPIRES_MINUTES} minutes</strong>.</p><p><a href="${magicLink}">${magicLink}</a></p><p>If you did not request this, you can safely ignore it.</p>`,
+    text: `Click this link to sign in (expires in ${expiresMinutes} minutes):\n\n${magicLink}\n\nIf you did not request this, you can safely ignore it.`,
+    html: `<p>Click the link below to sign in. It expires in <strong>${expiresMinutes} minutes</strong>.</p><p><a href="${magicLink}">${magicLink}</a></p><p>If you did not request this, you can safely ignore it.</p>`,
   });
 }
