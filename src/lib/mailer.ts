@@ -1,19 +1,23 @@
 import nodemailer from 'nodemailer';
 import { config } from '../config/index';
+import { mailQueue } from './queue';
 
 const transporter = nodemailer.createTransport({
   host: config.SMTP_HOST,
   port: config.SMTP_PORT,
   secure: config.SMTP_SECURE,
+  connectionTimeout: 5_000,
+  greetingTimeout: 5_000,
+  socketTimeout: 10_000,
   ...(config.SMTP_USER && config.SMTP_PASS
     ? { auth: { user: config.SMTP_USER, pass: config.SMTP_PASS } }
     : {}),
 });
 
-export async function sendMagicLink(
+export async function deliverMagicLink(
   to: string,
   magicLink: string,
-  expiresMinutes: number = config.MAGIC_LINK_EXPIRES_MINUTES,
+  expiresMinutes: number,
 ): Promise<void> {
   await transporter.sendMail({
     from: config.EMAIL_FROM,
@@ -22,4 +26,12 @@ export async function sendMagicLink(
     text: `Click this link to sign in (expires in ${expiresMinutes} minutes):\n\n${magicLink}\n\nIf you did not request this, you can safely ignore it.`,
     html: `<p>Click the link below to sign in. It expires in <strong>${expiresMinutes} minutes</strong>.</p><p><a href="${magicLink}">${magicLink}</a></p><p>If you did not request this, you can safely ignore it.</p>`,
   });
+}
+
+export async function sendMagicLink(
+  to: string,
+  magicLink: string,
+  expiresMinutes: number = config.MAGIC_LINK_EXPIRES_MINUTES,
+): Promise<void> {
+  await mailQueue.add('send-magic-link', { to, magicLink, expiresMinutes });
 }
